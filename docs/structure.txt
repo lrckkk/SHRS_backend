@@ -1,0 +1,55 @@
+project-root/
+├── apps/                       # 主应用模块（使用蓝本划分）
+│   ├── __init__.py             # 应用初始化（整合各个模块）
+│   ├── auth/                   # 认证模块
+│   │   ├── routes.py
+│   │   ├── models.py
+│   │   ├── schemas.py         # Marshmallow/Pydantic 数据校验
+│   │   └── services.py        # 业务逻辑
+│   ├── user/                  # 用户管理模块
+│   │   ├── routes.py
+│   │   ├── models.py
+│   │   └── ...
+│   └── api/                   # API模块（可按版本细分）
+│       └── v1/                # API版本控制
+│           ├── __init__.py
+│           ├── routes.py
+│           └── ...
+├── config/                    # 配置管理
+│   ├── __init__.py
+│   ├── default.py
+│   ├── development.py
+│   ├── production.py
+│   └── testing.py
+├── core/                      # 核心组件
+│   ├── __init__.py
+│   ├── extensions.py         # 扩展初始化（SQLAlchemy, Redis等）
+│   ├── security.py           # 安全相关组件
+│   └── exceptions.py         # 自定义异常处理
+├── models/                   # 全局数据模型（可选）
+│   └── base.py              # 基础模型类
+├── utils/                    # 工具类
+│   ├── logger.py            # 日志配置
+│   ├── helpers.py           # 通用工具函数
+│   └── middleware.py        # 自定义中间件
+├── tests/                    # 测试目录
+│   ├── unit/
+│   ├── integration/
+│   └── conftest.py
+├── migrations/               # 数据库迁移脚本（使用Alembic）
+├── static/                   # 静态文件（可选）
+├── templates/               # 模板文件（可选）
+├── requirements/            # 依赖管理
+│   ├── dev.txt
+│   ├── prod.txt
+│   └── test.txt
+├── tasks/                   # 异步任务（Celery）
+│   ├── __init__.py
+│   └── example_task.py
+├── docs/                    # 项目文档
+├── .env                    # 本地环境变量
+├── .gitignore
+├── Dockerfile
+├── docker-compose.yml
+├── manage.py               # 命令行管理入口
+└── app.py                  # 应用入口（或wsgi.py）
