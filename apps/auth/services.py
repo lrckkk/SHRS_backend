@@ -1,17 +1,70 @@
-from sqlalchemy import select
-
+# from sqlalchemy import select
+#
+# from apps.user.models import User
+# from core.extensions import db
+# from utils.commonresponse import make_response
+#
+#
+# def auth_user(email, password):
+#     stmt = select(User).where(User.email == email)
+#     print(stmt)
+#     result = db.session.execute(stmt).scalar_one_or_none()
+#     print(result)
+#     if result is None:                                           #用户不存在
+#         return 999
+#     if result.password != password:                              #密码错误
+#         return 888
+#     return 200
+from werkzeug.security import generate_password_hash
 from apps.user.models import User
 from core.extensions import db
-from utils.commonresponse import make_response
+from .schemas import RegisterSchema
+from core.exceptions import AuthenticationFailed
+from core.security import create_jwt_token
 
 
-def auth_user(email, password):
-    stmt = select(User).where(User.email == email)
-    print(stmt)
-    result = db.session.execute(stmt).scalar_one_or_none()
-    print(result)
-    if result is None:                                           #用户不存在
-        return 999
-    if result.password != password:                              #密码错误
-        return 888
-    return 200
+class AuthService:
+    """认证服务类"""
+
+    @staticmethod
+    def register_user(data):
+        """用户注册服务"""
+        # 验证数据
+        schema = RegisterSchema()
+        data = schema.load(data)
+
+        # 创建用户对象
+        user = User(
+            username=data['username'],
+            email=data['email'],
+            role=data['role']
+        )
+        user.password_hash = generate_password_hash(data['password'])
+
+        # 设置可选字段
+        for field in ['phone', 'full_name', 'address']:
+            if field in data:
+                setattr(user, field, data[field])
+
+        # 保存到数据库
+        db.session.add(user)
+        db.session.commit()
+        return user
+
+    @staticmethod
+    def authenticate_user(username, password):
+        """用户认证服务"""
+        user = User.query.filter_by(username=username).first()
+        if not user or not user.verify_password(password):
+            raise AuthenticationFailed('用户名或密码错误')
+        return user
+
+    @staticmethod
+    def generate_jwt_token(user):
+        """生成JWT令牌"""
+        token_payload = {
+            'sub': user.id,
+            'username': user.username,
+            'role': user.role
+        }
+        return create_jwt_token(token_payload)

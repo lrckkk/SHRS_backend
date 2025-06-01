@@ -1,4 +1,6 @@
 # config/development.py
+import os
+
 
 class DevelopmentConfig:
     DEBUG = True
@@ -20,4 +22,21 @@ class DevelopmentConfig:
     MAIL_DEFAULT_SENDER = '2959209045@qq.com'
 
     REDIS_URL = "redis://:@localhost:6379/0"
+
+    # 基础配置
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-secret-key'
+    JWT_EXPIRE_MINUTES = 60 * 2  # JWT过期时间 (2小时)
+
+    # 数据库配置
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+                              'mysql+pymysql://user:password@localhost/house_rental'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # 日志配置
+    LOG_LEVEL = 'DEBUG'
+
+    # API配置
+    API_TITLE = '房屋租赁系统 API'
+    API_VERSION = '1.0'
+    OPENAPI_VERSION = '3.0.3'
 
