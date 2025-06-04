@@ -26,12 +26,14 @@
 def init_app(app):
     """初始化应用模块"""
     # 注册认证蓝图
+    # 注册认证蓝图 - 移除多余的url_prefix
     from .auth.routes import auth_bp
-    app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
+    # 直接注册蓝图，不再添加额外的前缀
+    app.register_blueprint(auth_bp)
 
     # 注册用户管理蓝图
     from .user.routes import user_bp
-    app.register_blueprint(user_bp, url_prefix='/api/v1/users')
+    app.register_blueprint(user_bp)
 
     # 其他模块初始化...
     # from .property import routes as property_routes
