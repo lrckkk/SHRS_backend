@@ -15,6 +15,7 @@
 #     if result.password != password:                              #密码错误
 #         return 888
 #     return 200
+from flask import current_app
 from werkzeug.security import generate_password_hash
 from apps.user.models import User
 from core.extensions import db
@@ -52,12 +53,20 @@ class AuthService:
         return user
 
     @staticmethod
-    def authenticate_user(username, password):
+    def authenticate_user(email, password):
         """用户认证服务"""
-        user = User.query.filter_by(username=username).first()
-        if not user or not user.verify_password(password):
-            raise AuthenticationFailed('用户名或密码错误')
-        return user
+        try:
+            user = User.query.filter_by(email=email).first()
+            if not user:
+                raise AuthenticationFailed('用户不存在')
+            # 使用正确的密码验证
+            if not user.verify_password(password):
+                raise AuthenticationFailed('密码错误')
+            return user
+        except Exception as e:
+            # 记录详细的异常信息
+            current_app.logger.error(f"认证失败: {str(e)}")
+            raise AuthenticationFailed('登录失败')
 
     @staticmethod
     def generate_jwt_token(user):

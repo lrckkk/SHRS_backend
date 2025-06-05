@@ -5,10 +5,10 @@ class DevelopmentConfig:
     # 应用基础配置
     DEBUG = True
     TESTING = False
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key'  # 只定义一个
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'my_super_secret_key_12345!'  # 只定义一个
 
     # 数据库配置 (关键修复)
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:liu123@localhost:3306/shrs'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:songyiwei050819@localhost:3306/rental_system'
     SQLALCHEMY_ECHO = True  # 显示SQL语句
     SQLALCHEMY_TRACK_MODIFICATIONS = False  # 只保留一个
 
@@ -40,3 +40,4 @@ class DevelopmentConfig:
     API_TITLE = '房屋租赁系统 API'
     API_VERSION = '1.0'
     OPENAPI_VERSION = '3.0.3'
+

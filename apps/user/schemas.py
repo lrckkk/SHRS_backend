@@ -5,7 +5,8 @@
 #     class Meta:
 #         model = User
 #         load_instance = True
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields, validate, validates
+
 
 class UserProfileSchema(Schema):
     """用户资料模式"""
@@ -25,6 +26,7 @@ class UserProfileSchema(Schema):
         validate=validate.URL(schemes=['http', 'https']),
         error_messages={'validator_failed': '无效的头像URL'}
     )
+
 
 class UserPasswordSchema(Schema):
     """用户密码更改模式"""

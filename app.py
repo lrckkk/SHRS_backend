@@ -54,42 +54,37 @@
 #     app = create_app()
 #     app.run(host=app.config['HOST'], port=app.config['PORT'])
 from flask import Flask
+from flask_restx import Api
 from config import DevelopmentConfig
-from core.extensions import db, migrate
+from core.extensions import db, migrate, jwt
 from apps import init_app as init_app_modules
 from core.exceptions import handle_api_exception
 
 
 def create_app(config_class=DevelopmentConfig):
-    """应用工厂函数"""
     app = Flask(__name__)
-
-    # 加载配置
     app.config.from_object(config_class)
 
     # 初始化扩展
     from core.extensions import init_extensions
     init_extensions(app)
 
+    # 初始化API
+    api = Api(
+        version='1.0',
+        title='房屋租赁系统 API',
+        description='房屋租赁系统后端API',
+        doc='/docs'
+    )
+
     # 初始化应用模块
-    init_app_modules(app)
+    init_app_modules(app, api)
+
+    # 将API与app关联
+    api.init_app(app)
 
     # 注册错误处理器
     app.register_error_handler(Exception, handle_api_exception)
-
-    # 创建应用上下文
-    with app.app_context():
-        # 确保数据库迁移
-        migrate.init_app(app, db)
-
-        # 在首次请求时创建数据库表（仅开发环境）
-        if app.config.get('FLASK_ENV') == 'development':
-            @app.before_request
-            def before_request_func():
-                # 确保只运行一次
-                if not hasattr(app, 'database_initialized'):
-                    db.create_all()
-                    app.database_initialized = True
 
     return app
 

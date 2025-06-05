@@ -10,12 +10,19 @@
 #     email = fields.Email(required=True)
 #     password = fields.Str(required=True, validate=validate.Length(min=8))
 #     role = fields.Str(required=True, validate=validate.OneOf(['tenant', 'landlord', 'admin']))
-from marshmallow import Schema, fields, validate, validates, ValidationError
+import re
+
+from flask import current_app
+from marshmallow import Schema, fields, validate, validates, ValidationError, EXCLUDE
 from apps.user.models import User
 
 
 class LoginSchema(Schema):
-    """登录请求模式"""
+    """登录请求模式 - 忽略未知字段"""
+
+    class Meta:
+        unknown = EXCLUDE  # 关键：忽略未知字段
+
     username = fields.Str(required=True, error_messages={
         'required': '用户名是必填项'
     })
@@ -57,19 +64,20 @@ class RegisterSchema(Schema):
     )
 
     @validates('username')
-    def validate_username(self, value):
+    def validate_username(self, value, **kwargs):  # 添加 **kwargs
         """验证用户名唯一性"""
         if User.query.filter_by(username=value).first():
             raise ValidationError('该用户名已被使用')
 
     @validates('email')
-    def validate_email(self, value):
+    def validate_email(self, value, **kwargs):  # 添加 **kwargs
         """验证邮箱唯一性"""
-        if User.query.filter_by(email=value).first():
-            raise ValidationError('该邮箱已被注册')
+        with current_app.app_context():
+            if User.query.filter_by(email=value).first():
+                raise ValidationError('该邮箱已被注册')
 
     @validates('phone')
-    def validate_phone(self, value):
-        """验证手机号唯一性"""
-        if value and User.query.filter_by(phone=value).first():
-            raise ValidationError('该手机号已被使用')
+    def validate_phone(self, value, **kwargs):  # 添加 **kwargs
+        """验证手机号格式（如果提供）"""
+        if value and not re.match(r'^1[3-9]\d{9}$', value):
+            raise ValidationError('无效的手机号格式')
