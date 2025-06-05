@@ -7,6 +7,8 @@
 #     password = db.Column(db.String(255), nullable=False)
 #
 #
+import uuid
+
 from core.extensions import db
 from datetime import datetime
 import enum
@@ -23,16 +25,19 @@ class User(db.Model):
     """用户模型，对应数据库中的users表"""
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True, comment='用户ID')
+    # 确保id字段有默认值生成器
+    id = db.Column(
+        db.String(36),  # 或使用 db.String，如果使用UUID
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),  # 自动生成UUID
+        unique=True,
+        nullable=False
+    )
     username = db.Column(db.String(64), unique=True, nullable=False, comment='用户名')
     email = db.Column(db.String(120), unique=True, nullable=False, comment='邮箱')
     password_hash = db.Column(db.String(256), nullable=False, comment='加密后的密码')
-    role = db.Column(
-        db.Enum(UserRole),
-        nullable=False,
-        default=UserRole.TENANT,
-        comment='用户角色'
-    )
+    role = db.Column(db.String(20), default='user', nullable=False)
+
     phone = db.Column(db.String(20), unique=True, nullable=True, comment='手机号')
     phone_verified = db.Column(db.Boolean, nullable=False, default=False, comment='手机验证状态')
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, comment='创建时间')

@@ -13,17 +13,13 @@ def create_jwt_token(payload):
 
     # 构建有效载荷
     payload.update({
+        'sub': payload.get('sub'),  # 确保包含subject字段
         'exp': expire_time,
         'iat': datetime.utcnow(),
         'iss': 'house-rental-system'
     })
 
-    # 生成令牌
-    return jwt.encode(
-        payload,
-        current_app.config['SECRET_KEY'],
-        algorithm='HS256'
-    )
+    return jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256')
 
 
 def decode_jwt_token(token):
