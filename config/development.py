@@ -8,7 +8,7 @@ class DevelopmentConfig:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'my_super_secret_key_12345!'  # 只定义一个
 
     # 数据库配置 (关键修复)
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:songyiwei050819@localhost:3306/rental_system'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:liu123@localhost:3306/shrs'
     SQLALCHEMY_ECHO = True  # 显示SQL语句
     SQLALCHEMY_TRACK_MODIFICATIONS = False  # 只保留一个
 

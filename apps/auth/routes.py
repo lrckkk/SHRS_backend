@@ -1,11 +1,13 @@
 from flask_restx import Namespace, Resource, fields, reqparse
 from werkzeug.datastructures import FileStorage
 
+from core.extensions import db
 from .services import AuthService
 from .schemas import LoginSchema, RegisterSchema
 from core.exceptions import handle_api_exception, ValidationError
-from flask import request, current_app
+from flask import request, current_app, send_file, make_response
 from werkzeug.utils import secure_filename
+from apps.auth.models import image  # 导入Image模型
 import os
 
 # 创建认证命名空间
@@ -145,6 +147,16 @@ class AvatarUpload(Resource):
 
         # 保存文件
         file.save(filepath)
+        # 保存到数据库（新增或更新）
+        image_record = image.query.filter_by(id=user_id).first()
+        if image_record:
+            # 更新现有记录
+            image_record.image = filepath
+        else:
+            # 创建新记录
+            image_record = image(id=user_id, image=filepath)
+            db.session.add(image_record)
+        db.session.commit()
 
         # 记录用户头像路径（实际项目应存入数据库）
         user_avatars[user_id] = filepath
@@ -155,23 +167,53 @@ class AvatarUpload(Resource):
             'message': '头像上传成功',
             'avatar_url': avatar_url
         }, 201
-#
-# # 提供图片访问接口（你之前已有的）
-# @user_ns.route('/image')
-# class ImageResource(Resource):
-#     def get(self):
-#         path = request.args.get('path')
-#         if not path:
-#             return {'message': '缺少路径参数'}, 400
-#
-#         abs_path = os.path.abspath(path)
-#         upload_dir = os.path.abspath(UPLOAD_FOLDER)
-#
-#         # 安全检查
-#         if not abs_path.startswith(upload_dir):
-#             return {'message': '非法路径'}, 403
-#         if not os.path.exists(abs_path):
-#             return {'message': '文件不存在'}, 404
-#
-#         return send_file(abs_path)
 
+
+@auth_ns.route('/getavatar/<string:user_id>')
+class UserAvatar(Resource):
+    @staticmethod
+    def get(user_id):
+        """根据用户ID获取头像"""
+        # 从数据库获取图片路径
+        image_record = image.query.filter_by(id=user_id).first()
+
+        if not image_record or not image_record.image:
+            return {'message': '头像不存在'}, 404, {'Content-Type': 'application/json'}  # 添加响应头
+
+        filepath = image_record.image
+
+        # 安全检查
+        abs_path = os.path.abspath(filepath)
+        upload_dir = os.path.abspath(UPLOAD_FOLDER)
+
+        # 确保请求的文件在允许的目录内
+        if not abs_path.startswith(upload_dir):
+            return {'message': '非法路径'}, 403, {'Content-Type': 'application/json'}  # 添加响应头
+
+        if not os.path.exists(abs_path):
+            return {'message': '文件不存在'}, 404, {'Content-Type': 'application/json'}  # 添加响应头
+
+        # 确保请求的是图片文件
+        if not os.path.isfile(abs_path):
+            return {'message': '请求的不是文件'}, 400, {'Content-Type': 'application/json'}  # 添加响应头
+
+        # 尝试确定文件类型
+        try:
+            # 使用imghdr确定图片类型
+            import imghdr
+            image_type = imghdr.what(abs_path)
+            if not image_type:
+                # 尝试通过扩展名判断
+                ext = os.path.splitext(abs_path)[1].lower()[1:]
+                image_type = ext if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] else 'jpeg'
+
+            mimetype = f'image/{image_type}'
+        except Exception:
+            mimetype = 'image/jpeg'  # 默认类型
+
+        # 发送文件并添加必要的响应头
+        response = make_response(send_file(abs_path))
+        response.headers['Content-Type'] = mimetype
+        response.headers['Cache-Control'] = 'public, max-age=3600'  # 缓存1小时
+        response.headers['Access-Control-Expose-Headers'] = 'Content-Type, Content-Length, Cache-Control'
+        return response
