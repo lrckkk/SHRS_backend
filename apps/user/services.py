@@ -59,7 +59,7 @@ class UserService:
         if not user.verify_password(old_password):
             raise AuthenticationFailed('原密码错误')
 
-        user.password_hash = generate_password_hash(new_password)
+        user._password = generate_password_hash(new_password)
         db.session.commit()
 
     @staticmethod
@@ -75,7 +75,7 @@ class UserService:
 
         # 生成TOTP URI
         totp = TOTP(secret)
-        uri = totp.provisioning_uri(user.username, issuer_name="房屋租赁系统")
+        uri = totp.provisioning_uri(user._name, issuer_name="房屋租赁系统")
 
         return uri, None
 

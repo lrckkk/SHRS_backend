@@ -46,18 +46,24 @@ class RegisterResource(Resource):
         """用户注册"""
         try:
             # 使用注册Schema验证数据
-            schema = RegisterSchema()
-            data = schema.load(request.json)
-
+            data =request.json
             # 注册用户
-            user = AuthService.register_user(data)
-
-            return {
-                'message': '注册成功',
-                'user_id': user.id,
-                'username': user.username
-            }, 201
-
+            if data['role'] == 'tenant':
+                schema = RegisterSchema()
+                redata = schema.load(request.json)
+                user = AuthService.register_user(redata)
+                return {
+                    'message': '注册成功',
+                    'user_id': user.id,
+                    'username': user.username
+                }, 201
+            elif data['role'] == 'landlord':
+                landlord = AuthService.register_landlord(data)
+                return {
+                    'message': '注册成功',
+                    'user_id': landlord.id,
+                    'username': landlord._name
+                },201
         except Exception as e:
             return handle_api_exception(e)
 

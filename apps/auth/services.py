@@ -18,6 +18,7 @@
 from flask import current_app
 from werkzeug.security import generate_password_hash
 from apps.user.models import User
+from apps.user.models import Landlord
 from core.extensions import db
 from .schemas import RegisterSchema
 from core.exceptions import AuthenticationFailed
@@ -42,15 +43,30 @@ class AuthService:
         )
         user.password_hash = generate_password_hash(data['password'])
 
-        # 设置可选字段
-        for field in ['phone', 'full_name', 'address']:
-            if field in data:
-                setattr(user, field, data[field])
+        # 暂时隐藏
+        # # 设置可选字段
+        # for field in ['phone', 'full_name', 'address']:
+        #     if field in data:
+        #         setattr(user, field, data[field])
 
         # 保存到数据库
         db.session.add(user)
         db.session.commit()
         return user
+
+    @staticmethod
+    def register_landlord(data):
+        landlord = Landlord(
+            _name=str(data['username']),
+            _email=str(data['email']),
+            _phone_number=str(data['phone']),
+        )
+
+        landlord._password = str(generate_password_hash(data['password']))
+        landlord.to_dict()
+        db.session.add(landlord)
+        db.session.commit()
+        return landlord
 
     @staticmethod
     def authenticate_user(email, password):
