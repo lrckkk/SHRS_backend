@@ -32,6 +32,9 @@ def init_app(app, api):
     # 注册用户管理命名空间
     from .user.routes import user_ns
     api.add_namespace(user_ns)
+    from .house.routes import house_ns
+    api.add_namespace(house_ns)
+
     # 其他模块初始化...
     # from .property import routes as property_routes
     # app.register_blueprint(property_routes.property_bp, url_prefix='/api/v1/properties')
